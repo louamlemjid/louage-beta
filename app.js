@@ -12,8 +12,9 @@ const createWriteStream=require('fs')
 const path = require('path');
 const PDFDocument = require('pdfkit');
 const QRCode = require('qrcode');
+const dotenv=require('dotenv').config()
 
-const apiKey= "a7f1c121880248b8be689713686cef10"; 
+const apiKey= process.env.API_KEY; 
 const client = new twilio("AC7d121df3e81f3f52919a346a81a322de", "b8a2b42c92dfa5ebbb66905d9b0e8f74");
 
 
@@ -23,7 +24,7 @@ app.set('view engine','ejs');
 
 
 app.use(session({
-    secret: 'your-secret-key',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -246,7 +247,12 @@ db.once('open', async function () {
             }
         })
         app.get("/menu",(req,res)=>{
-            res.render("menu")
+            try{
+                res.render("menu")
+            }catch(error){
+                console.error("menu error",error)
+                res.send('get menu error',error)
+            }
         })
         app.post("/ajoutDestination",async(req,res)=>{
             const addDestination=await Station.updateOne({email:req.session.email_station},{$push:{louages:{destinationCity:req.body.city,tarif:req.body.tarif}}})
