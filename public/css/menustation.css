@@ -10,7 +10,7 @@
     border: none;
 }
 #menuform:hover{
-    box-shadow: 0px 0px 9px 2px white;
+    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.25);
     
 }
 .choices{
@@ -19,15 +19,18 @@
     width: 500px;
     margin: auto;
     padding: 20px;
-    border: solid 1px rgba(255, 178, 106, 0.466);
+    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.25);
     border-radius: 5px;
-    backdrop-filter: blur(3px);margin-top: 140px;
+    backdrop-filter: blur(3px);
+    margin-top: 140px;
+    background-color: white;
 }
 body{
-    background-image: url('/wall.jpg');
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: 40;
+    background-color: white;
+}
+nav{
+    border-bottom-right-radius: 10%;
+    border-bottom-left-radius: 10%;
 }
 @media screen and (max-width: 650px){
     .choices{
@@ -36,4 +39,8 @@ body{
         width: 250px;
         margin-top: 30px;
     }
+    nav{
+        border-bottom-right-radius: 50%;
+        border-bottom-left-radius: 50%;
+      }
 }

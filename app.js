@@ -374,13 +374,13 @@ db.once('open', async function () {
             var numeroTel=req.body.newItem5;
             var password=req.body.password;
             var matricule=req.body.matrLeft+"-Tunis-"+req.body.matrRight
-            Louaje.updateOne({email:email},{$set:{places:[defaultPlaces],password:password,matricule:matricule,availableSeats:8,name:firstName,lastName:lastName,email:email,numeroTel:numeroTel,cityDeparture:trajet1,cityArrival:trajet2}},{upsert:true}).then(data=>{console.log("louaje signup : ",data)});
+            Louaje.updateOne({email:email.toLowerCase()},{$set:{places:[defaultPlaces],password:password,matricule:matricule,availableSeats:8,name:firstName,lastName:lastName,email:email.toLowerCase(),numeroTel:numeroTel,cityDeparture:trajet1,cityArrival:trajet2}},{upsert:true}).then(data=>{console.log("louaje signup : ",data)});
             res.redirect("/login")
         })
         app.post("/login",function(req,res){
-            req.session.email_louage=req.body.email;
+            req.session.email_louage=req.body.email.toLowerCase();
             const password=req.body.password;
-            Louaje.find({email:req.session.email_louage}).then(data=>{
+            Louaje.find({email:req.session.email_louage.toLowerCase()}).then(data=>{
                 
                 if(data[0].password==password){
                     res.redirect(`/louaje`)
@@ -405,7 +405,7 @@ db.once('open', async function () {
                 .then((message) => console.log(`Message SID: ${message.sid}`))
                 .catch((error) => console.error(`Error: ${error.message}`));
             //send an email when a new user signs up
-            const toEmail=email;
+            const toEmail=email.toLowerCase();
             const subject="Welcome to LouajeExpress - Your Journey Begins Here!";
             const text=`Dear ${firstName},
             Welcome to LouajeExpress! We are thrilled to have you on board, and we're excited to embark on this journey together. Thank you for choosing LouajeExpress as your preferred app .. your gateway to a seamless and efficient experience.
@@ -426,20 +426,20 @@ db.once('open', async function () {
             // console.log('Email sent successfully 3:)');
             //session for passengers
             req.session.email_user=email;
-            Passenger.updateOne({email:email},{$set:{name:firstName,lastName:lastName,email:email,numeroTel:numeroTel,password:password,points:0}},{upsert:true}).then(data=>{
+            Passenger.updateOne({email:email.toLowerCase()},{$set:{name:firstName,lastName:lastName,email:email.toLowerCase(),numeroTel:numeroTel,password:password,points:0}},{upsert:true}).then(data=>{
                 console.log("passenger signup : ",data)
             })
             res.redirect("/signInPassenger");
         })
         app.post("/signInPassenger",function(req,res){
-            req.session.email_user=req.body.email;
+            req.session.email_user=req.body.email.toLowerCase();
             const password=req.body.password;
             const clientIp = req.clientIp;
             console.log(clientIp)
-            Passenger.findOne({email:req.session.email_user}).then(data=>{
+            Passenger.findOne({email:req.session.email_user.toLowerCase()}).then(data=>{
                 if(data!=null){
                     if(data.password==password){
-                    Passenger.updateOne({email:req.session.email_user},{ $inc: { points: 15 } }).then(added=>{console.log(added)})
+                    Passenger.updateOne({email:req.session.email_user.toLowerCase()},{ $inc: { points: 15 } }).then(added=>{console.log(added)})
                     res.redirect(`/iteraire`)
                 }}else{res.redirect(`/signInPassenger`)}
                 
@@ -509,7 +509,7 @@ db.once('open', async function () {
             const idlouage=req.params.id;
             const idstation=req.body.station;
             const passengers=req.body.passengers;
-            const idpassenger=await Passenger.findOne({email:req.session.email_user},{_id:1})
+            const idpassenger=await Passenger.findOne({email:req.session.email_user.toLowerCase()},{_id:1})
             const result=await Ticket.insertMany([{dateOfReservation:today(),idP:`${idpassenger.id}`,idS:`${idstation}`,idL:`${idlouage}`}])
             ticketData.ticketInfo={
                 idlouage:idlouage,
@@ -671,10 +671,10 @@ db.once('open', async function () {
             
             if(req.session.email_louage){
                 if(louajeLocation){
-                    const adressUpdate=await Louaje.updateOne({email:req.session.email_louage},{$set:{adress:louajeLocation.latitude+"-"+louajeLocation.longitude}});
+                    const adressUpdate=await Louaje.updateOne({email:req.session.email_louage.toLowerCase()},{$set:{adress:louajeLocation.latitude+"-"+louajeLocation.longitude}});
                     console.log("latitude longitude update louaje",adressUpdate)
                 }
-                const result =await Louaje.findOne({email:req.session.email_louage});
+                const result =await Louaje.findOne({email:req.session.email_louage.toLowerCase()});
                 if(result!=null){
                     depart=result.cityDeparture;
                     arrivee=result.cityArrival;
@@ -708,7 +708,7 @@ db.once('open', async function () {
             const createStation=await Station.insertMany([{
                 name:name,
                 city:city,
-                email:email,
+                email:email.toLowerCase(),
                 tel:tel,
                 password:password
             }])
@@ -720,10 +720,10 @@ db.once('open', async function () {
         app.post("/signinstation",async(req,res)=>{
             const email=req.body.email;
             const password=req.body.password;
-            const signIn=await Station.findOne({email:email});
+            const signIn=await Station.findOne({email:email.toLowerCase()});
             if(signIn!=null){
                 if(signIn.password==password){
-                    req.session.email_station=email;
+                    req.session.email_station=email.toLowerCase();
                     res.redirect("/menustation");
                 }
             }

@@ -8,15 +8,38 @@
     <title>general Login</title>
 </head>
 <body >
-    <style>
-        body{
-            background-image: url("/wall.jpg");
-        }
-    </style>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <img src="logo.svg" alt="a building" width="40" class="m-1">
+    
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="padding-left: 5px;padding-right: 5px;">
+        <button  id="drop" class="navbar-toggler bg-dark" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
         <p class="navbar-brand m-auto">L9itLouage</p>
-    </nav>
+        <img src="image.png" alt="a building" width="50" class="m-1" onclick="redirect('/generalLogin')">
+      
+        
+        <div class="collapse navbar-collapse" id="navbarNavDropdown" >
+          <ul class="navbar-nav ">
+            <li class="nav-item dropdown">
+              <a class="nav-link text-center" href="#"onclick="redirect('/adminStation')">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-center" href="#">Destinations</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-center" href="#">Louages</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-center" href="#">Tickets</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-center" href="#">Qr code sortie</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-center" href="#">Qr code sortie</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
     <br>
     <div class="choices">
         <form action="/signInPassenger" class="m-auto"  type="submit">
@@ -51,5 +74,6 @@
       <p class="text-center fs-4 text-light">© 2024 L9itLouage, Inc</p>
   
     </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 </body>
 </html>
