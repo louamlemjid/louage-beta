@@ -1,22 +1,14 @@
 /* style.css file*/
-body {
-	display: flex;
-	justify-content: center;
-	margin: 0;
-	padding: 0;
-	height: 100vh;
-	box-sizing: border-box;
-	text-align: center;
-	background: rgba(221, 221, 221, 0.66);
-}
+
 .container {
 	width: 100%;
 	max-width: 500px;
-	margin: 5px;
+	margin: auto;
 }
 
 .container h1 {
 	color: #000000;
+	text-align: center;
 }
 
 .section {

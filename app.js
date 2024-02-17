@@ -236,8 +236,6 @@ db.once('open', async function () {
     
     
     try {
-        
-        
         app.get(['/home','/'],(req,res)=>{
             try{
                 res.render("home")
@@ -600,21 +598,28 @@ db.once('open', async function () {
             
         // })
         app.get("/station",async(req,res)=>{
-            const sessionData = req.session.data || {};
-            const passengerInfo = sessionData.passengerInfo || null;
-            const passengerLocation= sessionData.passengerLocation || null;
-            if(passengerInfo){
-                const result=await Station.find({city:passengerInfo.departure},{louages:{$elemMatch: {destinationCity:"tunis"}}})
-                console.log(`le resultat est   ${result[0].louages[0].lougeIds}`)
-                const result2=await Louaje.find({ _id: { $in: result[0].louages[0].lougeIds},availableSeats: { $gte: passengerInfo.passengers }})
-                console.log(result2)
-                res.render("station",{
-                    louajes:result2,
-                    station:result[0].id,
-                    passengers:passengerInfo.passengers
-                })
-            }  
-            else{res.render("station")}
+            try{
+                const sessionData = req.session.data || {};
+                const passengerInfo = sessionData.passengerInfo || null;
+                const passengerLocation= sessionData.passengerLocation || null;
+                if(passengerInfo){
+                    const result=await Station.find({city:passengerInfo.departure},{louages:{$elemMatch: {destinationCity:"tunis"}}})
+                    console.log(`le resultat est   ${result[0].louages[0].lougeIds}`)
+                    const result2=await Louaje.find({ _id: { $in: result[0].louages[0].lougeIds},availableSeats: { $gte: passengerInfo.passengers }})
+                    console.log(result2)
+                    res.render("station",{
+                        louajes:result2,
+                        station:result[0].id,
+                        passengers:passengerInfo.passengers
+                    })
+                }  
+                else{res.render("station")}
+            }catch(error){
+                console.error("error fetching the station and the louage",error)
+                req.session.errorMessage=`Pas de station avec ce nom`
+                res.redirect('/errorPage')
+                
+            }
             // if(passengerInfo){
             //     // Station.find({city:passengerInfo.departure}).then(result=>{
             //     //     console.log(result)
@@ -639,8 +644,12 @@ db.once('open', async function () {
             //     res.render("station")
             // }
         })
+        app.get('/errorPage',(req,res)=>{
+            res.render("errorPage",{errorMessage:req.session.errorMessage})
+            
+        })
         app.get("/iteraire",function(req,res){
-
+            req.session.errorMessage="";
             res.render("iteraire");
         })
 
