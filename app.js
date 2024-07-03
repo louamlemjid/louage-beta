@@ -14,14 +14,33 @@ const PDFDocument = require('pdfkit');
 const QRCode = require('qrcode');
 const dotenv=require('dotenv').config()
 
+//import collections
+const Passenger=require('./models/passenger')
+const Ticket=require('./models/ticket')
+const Louaje=require('./models/louaje')
+const Station=require('./models/station')
+
 const apiKey= process.env.API_KEY; 
 const client = new twilio("AC7d121df3e81f3f52919a346a81a322de", "b8a2b42c92dfa5ebbb66905d9b0e8f74");
 
 
 const app=express();
+const router=express.Router()
 app.use(requestIp.mw());
 app.set('view engine','ejs');
 
+
+
+
+//require routers
+const qrCodeScan=require(path.join(__dirname,'./controllers/qrCodeScan'))
+const qrCodeScanSortie=require(path.join(__dirname,'./controllers/qrCodeScanSortie'))
+const louaje=require(path.join(__dirname,'./controllers/louaje'))
+const login=require(path.join(__dirname,'./controllers/login'))
+
+
+app.use(bodyparser.urlencoded({extended:true}));
+app.use(bodyparser.json());
 
 app.use(session({
     secret: process.env.SESSION_SECRET,
@@ -32,72 +51,17 @@ app.use(session({
     }
 }));
 
-app.use(bodyparser.urlencoded({extended:true}));
-app.use(bodyparser.json());
 app.use(express.static("public"));
+//user routers
+app.use("/qrCodeScan",qrCodeScan)
+app.use("/qrCodeScanSortie",qrCodeScanSortie)
+app.use("/louaje",louaje)
+app.use("/login",login)
+
+
+
 mongoose.connect('mongodb+srv://louam-lemjid:8hAgfKf2ZDauLxoj@cluster0.mjqmopn.mongodb.net/Louajedb');
 
-
-
-
-
-const louajeschema=new mongoose.Schema({
-    name:String,
-    lastName:String,
-    email:String,
-    password:String,
-    model:String,//toyota..
-    matricule:String,//240 Tunis 2039
-    numeroTel:Number,
-    places:[],
-    availableSeats:Number,
-    Status:String,//si les places sans occupé elle prend "left" sinon "filling"
-    cityDeparture:String,
-    cityArrival:String,
-    trajet:String,//city1-city2
-    adress:String
-});
-const Louaje=mongoose.model('Louaje',louajeschema);
-
-const stationschema=new mongoose.Schema({
-    name:String,
-    password:String,
-    email:String,
-    tel:Number,
-    city:String,
-    adress:String,//latitude and longitude
-    louages:[
-        {
-            destinationCity:String,
-            lougeIds:[],
-            tarif:Number
-        }
-    ],
-    date:Date,
-    countLouaje:Number//nombres des louajes dans la stations
-});
-const Station=mongoose.model('Station',stationschema);
-
-const passengerschema=new mongoose.Schema({
-    name:String,
-    lastName:String,
-    email:String,
-    numeroTel:Number,
-    password:String,
-    adress:String,//latitude and longitude
-    points:Number
-});
-const Passenger=mongoose.model('Passenger',passengerschema);
-
-const ticketschema= new mongoose.Schema({
-    dateOfReservation:Date,
-    price:Number,
-    travel:String,
-    idP:String,
-    idL:String,
-    idS:String
-})
-const Ticket=mongoose.model('Ticket',ticketschema);
 //function to send a welcome email to users
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -139,6 +103,7 @@ function today(){
     let today=month+"/"+day+"/"+year;
     return today
 }
+
 //retuen the list of free seats from the places array
 function getFreeSeatsList(listSeats){
     const listFreeSeats=[];
@@ -260,101 +225,7 @@ db.once('open', async function () {
         app.get('/adminStation',function(req,res){
             res.render("adminStation")
         })
-        app.get("/qrCodeScan",function(req,res){
-            res.render('qrCodeScan')
-        })
-        app.get("/qrCodeScanSortie",function(req,res){
-            res.render('qrCodeScanSortie')
-        })
-        app.post("/qrCodeScanSortie",async(req,res)=>{
-            const qrCodeValue = req.body.qrCodeValue;
-            // Handle the QR code value as needed
-            console.log('Received QR code value:', qrCodeValue);
-            const louage=await Louaje.findById({_id:qrCodeValue})
-            console.log(louage._id)
-            // [trajet1,trajet2]=louage.trajet.split("-")
-            const stationInfo=await Station.findOne({email:req.session.email_station})
-            const statusLouage=await updateOne({id:louage.id},{$set:{Status:"left"}})
-            const result2=await Station.findOneAndUpdate(
-                { name: stationInfo.name, "louages.destinationCity": louage.cityArrival },
-                { $pull: { "louages.$.lougeIds": louage._id } },
-                { new: true } 
-            )
-            console.log(result2)
-            res.redirect("/qrCodeScanSortie")
-        })
-        app.post("/qrCodeScan",async(req,res)=>{
-            const qrCodeValue = req.body.qrCodeValue;
-            // Handle the QR code value as needed
-            console.log('Received QR code value:', qrCodeValue);
-            const louage=await Louaje.findById({_id:qrCodeValue})
-            console.log(louage._id)
-            // [trajet1,trajet2]=louage.trajet.split("-")
-            const defaultPlaces = {
-                one: 'free',
-                two: 'free',
-                three: 'free',
-                four: 'free',
-                five: 'free',
-                six: 'free',
-                seven: 'free',
-                eight: 'free',
-                };
-
-            const stationInfo=await Station.findOne({email:req.session.email_station})
-            const statusLouage=await Louaje.updateOne({id:louage.id},{$set:{places:defaultPlaces,Status:"filling",cityDeparture:stationInfo.city,cityArrival:louage.cityDeparture}})
-            const result2=await Station.findOneAndUpdate(
-                { name: stationInfo.name, "louages.destinationCity": louage.cityDeparture },
-                { $addToSet: { "louages.$.lougeIds": louage._id } },
-                { new: true } 
-            )
-            console.log(result2)
-            
-            res.redirect("/qrCodeScan")
-        })
-        app.post('/louaje',function(req,res){
-            try{
-                const email=req.session.email_louage;
-            const clickedElement = req.body.clickedElement;
-            const status=req.body.class;
-            console.log("louaje :: status :",status)
-            const nombrePlaces=req.body.nombrePlaces
-            console.log("post louaje",clickedElement)
-            console.log("post louaje, classname",req.body.class,nombrePlaces)
-            switch (clickedElement){
-                case "one":
-                    Louaje.updateOne({email:email},{$set:{"places.0.one":status,availableSeats:nombrePlaces}}).then(data=>{console.log(data)});
-                    break;
-                case "two":
-                    Louaje.updateOne({email:email},{$set:{"places.0.two":status,availableSeats:nombrePlaces}}).then(data=>{console.log(data)});
-                    break;
-                case "three":
-                    Louaje.updateOne({email:email},{$set:{"places.0.three":status,availableSeats:nombrePlaces}}).then(data=>{console.log(data)});
-                    break;
-                case "four":
-                    Louaje.updateOne({email:email},{$set:{"places.0.four":status,availableSeats:nombrePlaces}}).then(data=>{console.log(data)});
-                    break;
-                case "five":
-                    Louaje.updateOne({email:email},{$set:{"places.0.five":status,availableSeats:nombrePlaces}}).then(data=>{console.log(data)});
-                    break;
-                case "six":
-                    Louaje.updateOne({email:email},{$set:{"places.0.six":status,availableSeats:nombrePlaces}}).then(data=>{console.log(data)});
-                    break;
-                case "seven":
-                    Louaje.updateOne({email:email},{$set:{"places.0.seven":status,availableSeats:nombrePlaces}}).then(data=>{console.log(data)});
-                    break;
-                case "eight":
-                    Louaje.updateOne({email:email},{$set:{"places.0.eight":status,availableSeats:nombrePlaces}}).then(data=>{console.log(data)});
-                    break;
-            };
-            // res.redirect("/louaje");
-            res.redirect(`/louaje?message=${encodeURIComponent(clickedElement)}`);
-            }catch(error){
-                console.error("louage cannot change status error : ",error)
-                res.redirect('/home')
-            }
-            
-        });
+        
         app.post("/signup",function(req,res){
             const defaultPlaces = {
                 one: 'free',
@@ -377,17 +248,7 @@ db.once('open', async function () {
             Louaje.updateOne({email:email.toLowerCase()},{$set:{places:[defaultPlaces],password:password,matricule:matricule,availableSeats:8,name:firstName,lastName:lastName,email:email.toLowerCase(),numeroTel:numeroTel,cityDeparture:trajet1,cityArrival:trajet2}},{upsert:true}).then(data=>{console.log("louaje signup : ",data)});
             res.redirect("/login")
         })
-        app.post("/login",function(req,res){
-            req.session.email_louage=req.body.email.toLowerCase();
-            const password=req.body.password;
-            Louaje.find({email:req.session.email_louage.toLowerCase()}).then(data=>{
-                
-                if(data[0].password==password){
-                    res.redirect(`/louaje`)
-                }
-                
-            })
-        })
+        
         app.post('/signuppassage',function(req,res){
             var firstName=req.body.newItem;
             var lastName=req.body.newItem1;
@@ -659,38 +520,7 @@ db.once('open', async function () {
         app.get("/signuppassenger",function(req,res){
             res.render("passage",{email:req.session.email_user});
         })
-        app.get("/louaje",async(req,res)=>{
-            var depart="";
-            var arrivee="";
-            var matrLeft="";
-            var matrRight="";
-            const louajeData = req.session.data || {};
-            const  louajeLocation= louajeData.louajeLocation || null;
-            console.log("get louaje",req.session.email_louage,louajeLocation);
-            
-            
-            if(req.session.email_louage){
-                if(louajeLocation){
-                    const adressUpdate=await Louaje.updateOne({email:req.session.email_louage.toLowerCase()},{$set:{adress:louajeLocation.latitude+"-"+louajeLocation.longitude}});
-                    console.log("latitude longitude update louaje",adressUpdate)
-                }
-                const result =await Louaje.findOne({email:req.session.email_louage.toLowerCase()});
-                if(result!=null){
-                    depart=result.cityDeparture;
-                    arrivee=result.cityArrival;
-                    matrLeft=result.matricule.split("-")[0];
-                    matrRight=result.matricule.split("-")[2];
-                    
-                    console.log(result)
-                    
-                    QRCode.toDataURL(`${result.id}`, function (err, url) {
-                        res.render('louaje',{depart:depart,arrivee:arrivee,matrLeft:matrLeft,matrRight:matrRight,url:url,places:result.places[0],availableSeats:result.availableSeats});
-                    })
-                }
-            }
-            
-            
-        });
+        
         
         // app.post("/signupstation",async(req,res)=>{
             // res.redirect("/adminStation")
@@ -747,9 +577,7 @@ db.once('open', async function () {
             res.render("signup");
         })
         //signin louage
-        app.get("/login",function(req,res){
-            res.render("login");
-        })
+        
         app.get("/search",function(req,res){
             res.render("search");
         });
