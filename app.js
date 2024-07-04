@@ -59,7 +59,7 @@ app.use("/louaje",louaje)
 app.use("/login",login)
 
 
-//
+
 mongoose.connect('mongodb+srv://louam-lemjid:8hAgfKf2ZDauLxoj@cluster0.mjqmopn.mongodb.net/Louajedb');
 
 //function to send a welcome email to users
