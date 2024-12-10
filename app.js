@@ -464,7 +464,8 @@ db.once('open', async function () {
                 const passengerInfo = sessionData.passengerInfo || null;
                 const passengerLocation= sessionData.passengerLocation || null;
                 if(passengerInfo){
-                    const result=await Station.find({city:passengerInfo.departure},{louages:{$elemMatch: {destinationCity:"tunis"}}})
+                    const result=await Station.find({city:passengerInfo.departure},{louages:{$elemMatch: {destinationCity:passengerInfo.destination}}})
+                    console.log(`le resultat est   ${result}`)
                     console.log(`le resultat est   ${result[0].louages[0].lougeIds}`)
                     const result2=await Louaje.find({ _id: { $in: result[0].louages[0].lougeIds},availableSeats: { $gte: passengerInfo.passengers }})
                     console.log(result2)
