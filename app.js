@@ -60,7 +60,7 @@ app.use("/login",login)
 
 
 
-mongoose.connect('mongodb+srv://louam-lemjid:8hAgfKf2ZDauLxoj@cluster0.mjqmopn.mongodb.net/Louajedb');
+mongoose.connect(process.env.MONGODB_URI);
 
 //function to send a welcome email to users
 const transporter = nodemailer.createTransport({
